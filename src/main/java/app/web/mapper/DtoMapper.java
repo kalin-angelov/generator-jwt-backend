@@ -1,16 +1,23 @@
 package app.web.mapper;
 
-import app.web.dto.RegisterResponse;
-import app.web.dto.LoginRequest;
+import app.user.model.User;
+import app.web.dto.UserResponse;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class DtoMapper {
 
-    public RegisterResponse toRegisterResponse(LoginRequest loginRequest, String message) {
+    public UserResponse toUserResponse(User user) {
 
-        return RegisterResponse.builder()
-                .message(message)
+        return UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .imgUrl(user.getImgUrl())
+                .isActive(user.isActive())
+                .role(user.getRole())
                 .build();
     }
 }
