@@ -41,7 +41,7 @@ public class UserService {
     public String register(RegisterRequest registerRequest) {
 
         Optional<User> optionalUserFindByUsername = userRepository.findByUsername(registerRequest.getUsername());
-        Optional<User> optionalUserFindByEmail = userRepository.findByEmail(registerRequest.getEmail());
+        Optional<User> optionalUserFindByEmail = this.findUserByEmail(registerRequest.getEmail());
 
         if (optionalUserFindByEmail.isPresent()) {
             log.info("User with email [%s] already exist.".formatted(registerRequest.getEmail()));
@@ -85,16 +85,30 @@ public class UserService {
         return "Invalid username or password.";
     }
 
-    public User editUser(UUID id, EditRequest editRequest) {
+    public boolean editUser(UUID id, EditRequest editRequest) {
 
-        User user = userRepository.findById(id).orElseThrow();
+        User user = this.getUser(id);
+        Optional<User> optionalUserFindByEmail = this.findUserByEmail(editRequest.getEmail());
+
+        if (optionalUserFindByEmail.isPresent() && !user.getEmail().equals(optionalUserFindByEmail.get().getEmail()) || editRequest.getEmail().isBlank()) {
+            return false;
+        }
 
         user.setEmail(editRequest.getEmail());
-        user.setUsername(editRequest.getUsername());
+        user.setFirstName(editRequest.getFirstName());
+        user.setLastName(editRequest.getLastName());
         user.setImgUrl(editRequest.getImgUrl());
 
         userRepository.save(user);
         log.info("User with id [%s] successfully updated".formatted(user.getId()));
-        return user;
+        return true;
+    }
+
+    public User getUser(UUID userId) {
+        return userRepository.findById(userId).orElseThrow();
+    }
+
+    private Optional<User> findUserByEmail (String email) {
+        return userRepository.findByEmail(email);
     }
 }
