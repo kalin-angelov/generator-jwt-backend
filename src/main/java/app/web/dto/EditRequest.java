@@ -8,7 +8,8 @@ import lombok.Data;
 public class EditRequest {
 
     private String email;
-    private String username;
     private String imgUrl;
+    private String firstName;
+    private String lastName;
 
 }
