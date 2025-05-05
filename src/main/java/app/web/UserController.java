@@ -4,7 +4,9 @@ import app.user.model.User;
 import app.user.model.UserPrincipal;
 import app.user.service.UserService;
 import app.web.dto.EditRequest;
+import app.web.dto.MessageResponse;
 import app.web.dto.UserResponse;
+import app.web.mapper.DtoMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,29 +22,36 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-
     @GetMapping("/profile")
     private ResponseEntity<UserResponse> getUserInfo (@AuthenticationPrincipal UserPrincipal userPrincipal) {
         User user = userPrincipal.getUser();
+        UserResponse response = DtoMapper.toUserResponse(user);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(UserResponse.builder()
-                        .status(HttpStatus.OK.value())
-                        .user(user)
-                        .build());
+                .body(response);
     }
 
     @PutMapping("/{id}/edit")
-    public ResponseEntity<UserResponse> editUser(@PathVariable UUID id, @RequestBody EditRequest editRequest) {
+    public ResponseEntity<?> editUser(@PathVariable UUID id, @RequestBody EditRequest editRequest) {
 
-        User updatedUser = userService.editUser(id, editRequest);
+        boolean updatedUser = userService.editUser(id, editRequest);
+
+        if (updatedUser) {
+            User user = userService.getUser(id);
+            UserResponse response = DtoMapper.toUserResponse(user);
+
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(response);
+        }
 
         return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(UserResponse.builder()
-                        .status(HttpStatus.OK.value())
-                        .user(updatedUser)
+                .status(HttpStatus.BAD_REQUEST)
+                .body(MessageResponse.builder()
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .successful(false)
+                        .message("Invalid Email")
                         .build());
     }
 }
