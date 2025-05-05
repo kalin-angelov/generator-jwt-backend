@@ -3,7 +3,7 @@ package app.web;
 import app.user.service.UserService;
 import app.web.dto.LoginResponse;
 import app.web.dto.RegisterRequest;
-import app.web.dto.RegisterResponse;
+import app.web.dto.MessageResponse;
 import app.web.dto.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,14 +21,14 @@ public class AuthController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<MessageResponse> register(@RequestBody RegisterRequest registerRequest) {
 
         String message = userService.register(registerRequest);
 
         if (message.contains("taken")) {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
-                    .body(RegisterResponse.builder()
+                    .body(MessageResponse.builder()
                         .status(HttpStatus.CONFLICT.value())
                         .successful(false)
                         .message(message)
@@ -37,7 +37,7 @@ public class AuthController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(RegisterResponse.builder()
+                .body(MessageResponse.builder()
                     .status(HttpStatus.CREATED.value())
                     .successful(true)
                     .message(message)
