@@ -1,5 +1,8 @@
 package app.user.service;
 
+import app.exceptions.EmailExistInDatabaseException;
+import app.exceptions.InvalidUsernameOrPasswordException;
+import app.exceptions.UsernameExistInDatabaseException;
 import app.jwt.JwtService;
 import app.user.model.User;
 import app.user.model.UserRole;
@@ -38,19 +41,19 @@ public class UserService {
     }
 
     @Transactional
-    public String register(RegisterRequest registerRequest) {
+    public User register(RegisterRequest registerRequest) {
 
         Optional<User> optionalUserFindByUsername = userRepository.findByUsername(registerRequest.getUsername());
         Optional<User> optionalUserFindByEmail = this.findUserByEmail(registerRequest.getEmail());
 
         if (optionalUserFindByEmail.isPresent()) {
             log.info("User with email [%s] already exist.".formatted(registerRequest.getEmail()));
-            return "Email is taken";
+            throw new EmailExistInDatabaseException();
         }
 
         if (optionalUserFindByUsername.isPresent()) {
             log.info("User with username [%s] already exist.".formatted(registerRequest.getUsername()));
-            return "Username is taken";
+            throw new UsernameExistInDatabaseException();
         }
 
         User user = User.builder()
@@ -64,7 +67,7 @@ public class UserService {
 
         userRepository.save(user);
         log.info("User with id [%s] and username [%s] successfully created".formatted(user.getId(), user.getUsername()));
-        return "User successfully created";
+        return user;
 
     }
 
@@ -82,16 +85,16 @@ public class UserService {
             log.info(e.getMessage());
         }
 
-        return "Invalid username or password.";
+        throw new InvalidUsernameOrPasswordException();
     }
 
-    public boolean editUser(UUID id, EditRequest editRequest) {
+    public User editUser(UUID id, EditRequest editRequest) {
 
         User user = this.getUser(id);
         Optional<User> optionalUserFindByEmail = this.findUserByEmail(editRequest.getEmail());
 
         if (optionalUserFindByEmail.isPresent() && !user.getEmail().equals(optionalUserFindByEmail.get().getEmail()) || editRequest.getEmail().isBlank()) {
-            return false;
+            throw new EmailExistInDatabaseException();
         }
 
         user.setEmail(editRequest.getEmail());
@@ -101,7 +104,7 @@ public class UserService {
 
         userRepository.save(user);
         log.info("User with id [%s] successfully updated".formatted(user.getId()));
-        return true;
+        return user;
     }
 
     public User getUser(UUID userId) {

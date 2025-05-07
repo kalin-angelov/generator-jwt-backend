@@ -4,7 +4,6 @@ import app.user.model.User;
 import app.user.model.UserPrincipal;
 import app.user.service.UserService;
 import app.web.dto.EditRequest;
-import app.web.dto.MessageResponse;
 import app.web.dto.UserResponse;
 import app.web.mapper.DtoMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,25 +32,13 @@ public class UserController {
     }
 
     @PutMapping("/{id}/edit")
-    public ResponseEntity<?> editUser(@PathVariable UUID id, @RequestBody EditRequest editRequest) {
+    public ResponseEntity<UserResponse> editUser(@PathVariable UUID id, @RequestBody EditRequest editRequest) {
 
-        boolean updatedUser = userService.editUser(id, editRequest);
-
-        if (updatedUser) {
-            User user = userService.getUser(id);
-            UserResponse response = DtoMapper.toUserResponse(user);
-
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(response);
-        }
+        User user = userService.editUser(id, editRequest);
+        UserResponse response = DtoMapper.toUserResponse(user);
 
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(MessageResponse.builder()
-                        .status(HttpStatus.BAD_REQUEST.value())
-                        .successful(false)
-                        .message("Invalid Email")
-                        .build());
+                .status(HttpStatus.OK)
+                .body(response);
     }
 }
