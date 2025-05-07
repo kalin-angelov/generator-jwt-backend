@@ -1,7 +1,6 @@
 package app.web;
 
 import app.user.service.UserService;
-import app.web.dto.LoginResponse;
 import app.web.dto.RegisterRequest;
 import app.web.dto.MessageResponse;
 import app.web.dto.LoginRequest;
@@ -23,49 +22,29 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<MessageResponse> register(@RequestBody RegisterRequest registerRequest) {
 
-        String message = userService.register(registerRequest);
-
-        if (message.contains("taken")) {
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(MessageResponse.builder()
-                        .status(HttpStatus.CONFLICT.value())
-                        .successful(false)
-                        .message(message)
-                        .build());
-        }
+        userService.register(registerRequest);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(MessageResponse.builder()
                     .status(HttpStatus.CREATED.value())
                     .successful(true)
-                    .message(message)
+                    .message("User successfully created.")
                     .build());
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<MessageResponse> login(@RequestBody LoginRequest loginRequest) {
 
-        String result = userService.verify(loginRequest);
-
-        if (result.startsWith("Invalid")) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body(LoginResponse.builder()
-                            .status(HttpStatus.FORBIDDEN.value())
-                            .successful(false)
-                            .message("Invalid username or password.")
-                            .build());
-        }
+        String token = userService.verify(loginRequest);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(LoginResponse.builder()
+                .body(MessageResponse.builder()
                         .status(HttpStatus.OK.value())
                         .successful(true)
                         .message("Welcome")
-                        .token(result)
+                        .token(token)
                         .build());
     }
 }
