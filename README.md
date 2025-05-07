@@ -31,12 +31,20 @@ A Java-based web application for user registration, login, and profile editing. 
 Create a `.env` file in the root directory with the following content:
 
 ```bash
-  JWT_SECRET_KEY=your_jwt_secret
+JWT_SECRET_KEY=your_jwt_secret
 ```
 
 ### 3. Configure MySQL
 Create a MySQL database and update your application.properties:
-   
+
+```bash
+spring.datasource.url=jdbc:mysql://localhost:3306/your_db_name
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+```
+
+### 4. Run the application
+
 ---
 
 ## 📫 API Endpoints
