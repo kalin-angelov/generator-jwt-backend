@@ -1,6 +1,7 @@
 package app.user;
 
 import app.exceptions.EmailExistInDatabaseException;
+import app.exceptions.UsernameExistInDatabaseException;
 import app.jwt.JwtService;
 import app.user.model.User;
 import app.user.repository.UserRepository;
@@ -16,7 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -43,9 +43,11 @@ public class UserServiceTest {
                 .username("username")
                 .password("password")
                 .build();
+
         User existingUser = User.builder()
                 .email("MyMail@gmail.com")
                 .build();
+
         User newUser = User.builder().build();
 
         when(userRepository.findByEmail(registerRequest.getEmail())).thenReturn(Optional.of(existingUser));
@@ -53,5 +55,44 @@ public class UserServiceTest {
         assertThrows(EmailExistInDatabaseException.class, () -> userService.register(registerRequest));
         verify(userRepository, never()).save(newUser);
 
+    }
+
+    @Test
+    void givenExistingUsernameInDatabase_whenRegister_theExceptionIsThrown() {
+
+        RegisterRequest registerRequest = RegisterRequest.builder()
+                .email("MyEmail@gmail.com")
+                .username("usernameIsTaken")
+                .password("password")
+                .build();
+
+        User existingUser = User.builder()
+                .username("usernameIsTaken")
+                .build();
+
+        User newUser = User.builder().build();
+
+        when(userRepository.findByUsername(registerRequest.getUsername())).thenReturn(Optional.of(existingUser));
+
+        assertThrows(UsernameExistInDatabaseException.class, () -> userService.register(registerRequest));
+        verify(userRepository, never()).save(newUser);
+    }
+
+    @Test
+    void givenHappyPath_whenRegister() {
+
+        RegisterRequest registerRequest = RegisterRequest.builder()
+                .email("newUserEmail@gmail.com")
+                .username("newUser")
+                .password("password")
+                .build();
+
+        User newUser = User.builder().build();
+
+        when(userRepository.findByEmail(registerRequest.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(registerRequest.getUsername())).thenReturn(Optional.empty());
+        when(userRepository.save(any())).thenReturn(newUser);
+
+        userService.register(registerRequest);
     }
 }
