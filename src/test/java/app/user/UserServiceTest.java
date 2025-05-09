@@ -6,6 +6,7 @@ import app.jwt.JwtService;
 import app.user.model.User;
 import app.user.repository.UserRepository;
 import app.user.service.UserService;
+import app.web.dto.EditRequest;
 import app.web.dto.RegisterRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -94,5 +96,92 @@ public class UserServiceTest {
         when(userRepository.save(any())).thenReturn(newUser);
 
         userService.register(registerRequest);
+    }
+
+    @Test
+    void givenExistingEmailInDatabase_whenEditUser_thenExceptionIsThrown() {
+
+        UUID id = UUID.randomUUID();
+        EditRequest editRequest = EditRequest.builder()
+                .email("email@gmail.com")
+                .build();
+
+        User existingUser = User.builder()
+                .email("email@gmail.com")
+                .build();
+
+        User user = User.builder()
+                .email("oldEmail@gmail.com")
+                .build();
+
+        when(userRepository.findByEmail(editRequest.getEmail())).thenReturn(Optional.of(existingUser));
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+
+        assertThrows(EmailExistInDatabaseException.class, () -> userService.editUser(id, editRequest));
+        verify(userRepository, never()).save(user);
+    }
+
+    @Test
+    void givenHappyPath_whenEditUser() {
+
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .build();
+
+        EditRequest editRequest = EditRequest.builder()
+                .email("newEmail@gmail.com")
+                .firstName("first")
+                .lastName("last")
+                .build();
+
+        when(userRepository.findByEmail(editRequest.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+
+        userService.editUser(user.getId(), editRequest);
+
+        assertEquals(user.getEmail(), editRequest.getEmail());
+        assertEquals(user.getFirstName(), editRequest.getFirstName());
+        assertEquals(user.getLastName(), editRequest.getLastName());
+        verify(userRepository, times(1)).save(user);
+    }
+
+    @Test
+    void givenEmptyFirstName_whenEditUser_thenRemoveFirstNameFromUserInfo() {
+
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .build();
+
+        EditRequest editRequest = EditRequest.builder()
+                .email("newEmail@gmail.com")
+                .firstName(null)
+                .build();
+
+        when(userRepository.findByEmail(editRequest.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+
+        userService.editUser(user.getId(), editRequest);
+
+        assertNull(user.getFirstName());
+    }
+
+    @Test
+    void givenEmptyLastName_whenEditUser_thenRemoveLastNameFromUserInfo() {
+
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .build();
+
+        EditRequest editRequest = EditRequest.builder()
+                .email("newEmail@gmail.com")
+                .lastName(null)
+                .build();
+
+        when(userRepository.findByEmail(editRequest.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+
+        userService.editUser(user.getId(), editRequest);
+
+        assertNull(user.getLastName());
     }
 }
