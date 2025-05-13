@@ -38,7 +38,6 @@ public class AuthControllerApiTest {
     @Test
     void postRequestToRegisterEndpoint_happyPath() throws Exception {
 
-
         MockHttpServletRequestBuilder request = post("/api/v1/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsBytes(aRandomRegisterRequest()));

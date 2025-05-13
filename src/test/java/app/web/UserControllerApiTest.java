@@ -67,11 +67,12 @@ public class UserControllerApiTest {
                 .lastName(aRandomUser().getLastName())
                 .imgUrl(aRandomUser().getImgUrl())
                 .build();
+        UserPrincipal principal = new UserPrincipal(user);
 
         when(userService.editUser(userId, aRandomEditRequest())).thenReturn(user);
 
         MockHttpServletRequestBuilder request = put("/api/v1/users/{id}/edit", userId)
-                .with(user("username").roles(UserRole.USER.toString()))
+                .with(user(principal))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsBytes(aRandomEditRequest()));
@@ -89,12 +90,13 @@ public class UserControllerApiTest {
     @Test
     void putRequestToEditEndpoint_wheTryToEditEmailWithExistingEmailInDatabase() throws Exception {
 
-        UUID userId = UUID.randomUUID();
+        UserPrincipal principal = new UserPrincipal(aRandomUser());
+        UUID userId = principal.getUser().getId();
 
         when(userService.editUser(userId, aRandomEditRequest())).thenThrow(new EmailExistInDatabaseException());
 
         MockHttpServletRequestBuilder request = put("/api/v1/users/{id}/edit", userId)
-                .with(user("username").roles(UserRole.USER.toString()))
+                .with(user(principal))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsBytes(aRandomEditRequest()));

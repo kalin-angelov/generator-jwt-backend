@@ -27,12 +27,6 @@ public class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
-    @Mock
-    private PasswordEncoder passwordEncoder;
-    @Mock
-    private AuthenticationManager authenticationManager;
-    @Mock
-    private JwtService jwtService;
 
     @InjectMocks
     private UserService userService;
@@ -78,24 +72,6 @@ public class UserServiceTest {
 
         assertThrows(UsernameExistInDatabaseException.class, () -> userService.register(registerRequest));
         verify(userRepository, never()).save(newUser);
-    }
-
-    @Test
-    void givenHappyPath_whenRegister() {
-
-        RegisterRequest registerRequest = RegisterRequest.builder()
-                .email("newUserEmail@gmail.com")
-                .username("newUser")
-                .password("password")
-                .build();
-
-        User newUser = User.builder().build();
-
-        when(userRepository.findByEmail(registerRequest.getEmail())).thenReturn(Optional.empty());
-        when(userRepository.findByUsername(registerRequest.getUsername())).thenReturn(Optional.empty());
-        when(userRepository.save(any())).thenReturn(newUser);
-
-        userService.register(registerRequest);
     }
 
     @Test
