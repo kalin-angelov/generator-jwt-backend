@@ -3,6 +3,7 @@ package app.jwt;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,6 +20,7 @@ public class JwtService {
 
     Dotenv dotenv = Dotenv.load();
     private final String secretKey = dotenv.get("JWT_SECRET_KEY");
+    private static final String SECRET_KEY = "e0a064afdac2b850e0f9da78a4f509ed676aa4001c4a39e97f783e0d7bcdcdaf";
 
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
@@ -27,9 +29,9 @@ public class JwtService {
                 .add(claims)
                 .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 60 * 60 * 30))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
                 .and()
-                .signWith(getKey())
+                .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -42,7 +44,7 @@ public class JwtService {
         return extractExpiration(token).before(new Date());
     }
 
-    public Boolean validateToken(String token, UserDetails userDetails) {
+    public boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
