@@ -22,7 +22,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<MessageResponse> register(@RequestBody RegisterRequest registerRequest) {
 
-        userService.register(registerRequest);
+        String token = userService.register(registerRequest);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -30,6 +30,7 @@ public class AuthController {
                     .status(HttpStatus.CREATED.value())
                     .successful(true)
                     .message("User successfully created.")
+                    .token(token)
                     .build());
     }
 
