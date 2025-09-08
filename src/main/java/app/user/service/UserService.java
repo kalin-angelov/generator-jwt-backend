@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +42,7 @@ public class UserService {
     }
 
     @Transactional
-    public User register(RegisterRequest registerRequest) {
+    public String register(RegisterRequest registerRequest) {
 
         Optional<User> optionalUserFindByUsername = userRepository.findByUsername(registerRequest.getUsername());
         Optional<User> optionalUserFindByEmail = this.findUserByEmail(registerRequest.getEmail());
@@ -67,20 +68,17 @@ public class UserService {
 
         userRepository.save(user);
         log.info("User with id [%s] and username [%s] successfully created".formatted(user.getId(), user.getUsername()));
-        return user;
+        return jwtService.generateToken(user.getUsername());
 
     }
 
     public String verify(LoginRequest loginRequest) {
 
         try {
-            Authentication authentication =
-                    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+            User user = userRepository.findByUsername(loginRequest.getUsername()).orElseThrow(() -> new UsernameNotFoundException("User with username [%s] not found.".formatted(loginRequest.getUsername())));
 
-            if (authentication.isAuthenticated()) {
-                return jwtService.generateToken(loginRequest.getUsername());
-            }
-
+            return jwtService.generateToken(user.getUsername());
         } catch (Exception e) {
             log.info(e.getMessage());
         }
