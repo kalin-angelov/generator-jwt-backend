@@ -7,6 +7,7 @@ import app.jwt.JwtService;
 import app.user.model.User;
 import app.user.model.UserRole;
 import app.user.repository.UserRepository;
+import app.web.dto.ChangePasswordRequest;
 import app.web.dto.EditRequest;
 import app.web.dto.LoginRequest;
 import app.web.dto.RegisterRequest;
@@ -15,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -76,7 +76,8 @@ public class UserService {
 
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-            User user = userRepository.findByUsername(loginRequest.getUsername()).orElseThrow(() -> new UsernameNotFoundException("User with username [%s] not found.".formatted(loginRequest.getUsername())));
+            User user = userRepository.findByUsername(loginRequest.getUsername())
+                    .orElseThrow(() -> new UsernameNotFoundException("User with username [%s] not found.".formatted(loginRequest.getUsername())));
 
             return jwtService.generateToken(user.getUsername());
         } catch (Exception e) {
@@ -103,6 +104,20 @@ public class UserService {
         userRepository.save(user);
         log.info("User with id [%s] successfully updated".formatted(user.getId()));
         return user;
+    }
+
+    public void changePassword(User user,ChangePasswordRequest request) {
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Wrong password");
+        }
+
+        if (!request.getNewPassword().equals(request.getConferPassword())) {
+            throw new IllegalArgumentException("Passwords don't match");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 
     public User getUser(UUID userId) {
