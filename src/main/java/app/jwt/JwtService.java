@@ -20,7 +20,6 @@ public class JwtService {
 
     Dotenv dotenv = Dotenv.load();
     private final String secretKey = dotenv.get("JWT_SECRET_KEY");
-    private static final String SECRET_KEY = "e0a064afdac2b850e0f9da78a4f509ed676aa4001c4a39e97f783e0d7bcdcdaf";
 
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
