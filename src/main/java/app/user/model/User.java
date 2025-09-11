@@ -1,5 +1,6 @@
 package app.user.model;
 
+import app.token.model.Token;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -44,4 +46,7 @@ public class User {
 
     @Column(nullable = false)
     private LocalDateTime createdOn;
+
+    @OneToMany(mappedBy = "owner")
+    private List<Token> tokens;
 }
