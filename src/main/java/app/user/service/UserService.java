@@ -4,6 +4,7 @@ import app.exceptions.EmailExistInDatabaseException;
 import app.exceptions.InvalidUsernameOrPasswordException;
 import app.exceptions.UsernameExistInDatabaseException;
 import app.jwt.JwtService;
+import app.token.service.TokenService;
 import app.user.model.User;
 import app.user.model.UserRole;
 import app.user.repository.UserRepository;
@@ -32,13 +33,15 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final TokenService tokenService;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService, TokenService tokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.tokenService = tokenService;
     }
 
     @Transactional
@@ -57,29 +60,27 @@ public class UserService {
             throw new UsernameExistInDatabaseException();
         }
 
-        User user = User.builder()
-                .email(registerRequest.getEmail())
-                .username(registerRequest.getUsername())
-                .password(passwordEncoder.encode(registerRequest.getPassword()))
-                .role(UserRole.USER)
-                .isActive(true)
-                .createdOn(LocalDateTime.now())
-                .build();
-
-        userRepository.save(user);
+        User user = initializeUser(registerRequest);
+        String token = jwtService.generateToken(user.getUsername());
+        tokenService.initializeToken(user, token);
         log.info("User with id [%s] and username [%s] successfully created".formatted(user.getId(), user.getUsername()));
-        return jwtService.generateToken(user.getUsername());
+        return token;
 
     }
 
     public String verify(LoginRequest loginRequest) {
 
         try {
+
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
             User user = userRepository.findByUsername(loginRequest.getUsername())
                     .orElseThrow(() -> new UsernameNotFoundException("User with username [%s] not found.".formatted(loginRequest.getUsername())));
+            String token = jwtService.generateToken(user.getUsername());
 
-            return jwtService.generateToken(user.getUsername());
+            tokenService.revokedAllUserTokens(user);
+            tokenService.initializeToken(user, token);
+            return token;
+
         } catch (Exception e) {
             log.info(e.getMessage());
         }
@@ -126,5 +127,20 @@ public class UserService {
 
     private Optional<User> findUserByEmail (String email) {
         return userRepository.findByEmail(email);
+    }
+
+    private User initializeUser(RegisterRequest registerRequest) {
+
+        User user = User.builder()
+                .email(registerRequest.getEmail())
+                .username(registerRequest.getUsername())
+                .password(passwordEncoder.encode(registerRequest.getPassword()))
+                .role(UserRole.USER)
+                .isActive(true)
+                .createdOn(LocalDateTime.now())
+                .build();
+
+        return userRepository.save(user);
+
     }
 }
