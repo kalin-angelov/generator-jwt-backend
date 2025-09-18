@@ -113,7 +113,7 @@ public class UserService {
             throw new IllegalArgumentException("Wrong password");
         }
 
-        if (!request.getNewPassword().equals(request.getConferPassword())) {
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new IllegalArgumentException("Passwords don't match");
         }
 
