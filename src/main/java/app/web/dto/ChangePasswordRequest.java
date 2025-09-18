@@ -9,5 +9,5 @@ public class ChangePasswordRequest {
 
     private String oldPassword;
     private String newPassword;
-    private String conferPassword;
+    private String confirmPassword;
 }
