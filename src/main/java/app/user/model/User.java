@@ -39,6 +39,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
+    @Column(length = 1000)
     private String imgUrl;
 
     @Column(nullable = false)
