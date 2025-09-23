@@ -62,3 +62,7 @@ JWT token must be sent as Authorization: `Bearer <token>` in secured endpoints.
 
 ## 🧪 Testing
 You can use Postman to test the APIs. Make sure to first register a user, then login to receive the JWT, and use it in subsequent requests.
+
+---
+
+## Link to the frond end -> [Generate JWT Frontend](https://github.com/kalin-angelov/generate-jwt-frontend)
